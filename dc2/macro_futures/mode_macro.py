@@ -37,11 +37,11 @@ ZONA_MAP: dict[str, str] = {
 
 def _get_session_open(symbol: str, now: datetime) -> datetime:
     """
-    ES / NQ / YM (CME Globex): sesión abre a las 18:00 ET (domingo abre la semana;
-        viernes cierra ~17:00). No hay apertura sábado 18:00 ET: si el día
-        candidato cae en sábado o domingo, se retrocede hasta un día hábil.
+    ES / NQ / YM (CME Globex): session opens at 18:00 ET (Sunday opens the week;
+        Friday closes ~17:00). No Saturday 18:00 ET open: if the candidate day
+        falls on Saturday, roll back one day.
 
-    BTC (Binance): sesión = 00:00 UTC diario (equivale a ~20:00 ET en EDT).
+    BTC (Binance): session = 00:00 UTC daily (~20:00 ET EDT).
     """
     if now.tzinfo is None:
         now_et = _ET.localize(now)
@@ -60,7 +60,7 @@ def _get_session_open(symbol: str, now: datetime) -> datetime:
         candidate = d
     else:
         candidate = d - timedelta(days=1)
-    while candidate.weekday() == 5:  # solo sábado
+    while candidate.weekday() == 5:  # Saturday only — Sunday 18:00 is valid
         candidate -= timedelta(days=1)
     return _ET.localize(datetime.combine(candidate, time(18, 0, 0)))
 
@@ -167,8 +167,8 @@ def _session_1m_high_low(
 
 def run_macro_analysis(lookback_days: int = 5) -> dict[str, Any]:
     """
-    BP congelado: BPCalculator con cutoff_bp = session_open + 1 min (snapshot al nacer la sesión).
-    Badge / signals_3_9 / ema_alignment usan now (estado actual).
+    Frozen BP: BPCalculator with cutoff_bp = session_open + 1 min (snapshot at session birth).
+    Badge / signals_3_9 / ema_alignment use now (current state).
     """
     client = FuturesDataClient()
     all_bars = client.fetch_all_bars(lookback_days=lookback_days)
@@ -180,7 +180,7 @@ def run_macro_analysis(lookback_days: int = 5) -> dict[str, Any]:
         bars_dict: dict[str, list] = all_bars.get(symbol, {})
         bars_1m = bars_dict.get("1m") or []
         if not bars_1m:
-            logger.warning("[%s] Sin barras 1m — omitido", symbol)
+            logger.warning("[%s] No 1m bars — skipping", symbol)
             continue
 
         precio_actual = float(bars_1m[-1]["c"])
@@ -201,7 +201,7 @@ def run_macro_analysis(lookback_days: int = 5) -> dict[str, Any]:
 
         if bp is None:
             logger.warning(
-                "[%s] BP=None — sin barras en TFs al cutoff_bp %s",
+                "[%s] BP=None — no bars across TFs at cutoff_bp %s",
                 symbol,
                 cutoff_bp_dt.strftime("%Y-%m-%d %H:%M ET"),
             )

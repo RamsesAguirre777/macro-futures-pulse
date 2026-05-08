@@ -25,10 +25,12 @@ Frozen at: CME session_open + 1min (not premarket)
 ### Direction
 
 ```
-price > BP + threshold  → ALCISTA (bullish)
-price < BP - threshold  → BAJISTA (bearish)
+price > BP + threshold   → ALCISTA     (bullish)
+price < BP - threshold   → BAJISTA     (bearish)
 |price - BP| < threshold → ZONA_MUERTA (dead zone, wait)
 ```
+
+> These string labels are the literal values returned by `direction_from_dist()`.
 
 Threshold = `ZM_THRESHOLD_PCT × int_dist` ≈ 11% of INT distance.
 
@@ -66,15 +68,12 @@ Momentum score 0-100 combining:
 - EMA9 > EMA20 on 1m current (25 pts)
 - Gap up or green candle per TF: 1d/1h/30m/15m/5m (5 pts each)
 
-### Patrón V — Macro Semaphore
+### Pattern V — Macro Semaphore (planned)
 
-| TLT + GLD | Signal | Action |
-|-----------|--------|--------|
-| Both ALCISTA | PANIC MODE | Skip all bullish |
-| Both BAJISTA | RISK-ON MAX | Full size bullish |
-| TLT ALC / GLD BAJ | USD flight | Bearish USD-sensitive |
-| TLT BAJ / GLD ALC | Inflation | GLD bullish max conviction |
-| Both ZM | Neutral | Individual signals |
+A cross-asset filter using TLT (bonds) and GLD (gold) directions to classify
+the macro regime (risk-on, risk-off, inflation, USD flight, neutral) before
+evaluating individual futures. Not yet implemented in this release — the
+infrastructure (BP, direction, conviction) is the prerequisite.
 
 ## Data Sources
 
@@ -111,7 +110,7 @@ Session opens: ES/NQ/YM=18:00 ET  |  BTC=00:00 ET
      ES    ALCISTA     T2    D% +0.412%    BDG 75.0
   PRC   5,842.25    BP   5,818.0000
   INT  ▲5,873.75  ▼5,762.25    MAX  ▲5,929.25  ▼5,706.75
-  SIG  15m▲ 30m▲ 1h▲    DÍA ▲0.45% ▼0.31%   PRV ▲1.22% ▼0.88%
+  SIG  15m▲ 30m▲ 1h▲    DAY ▲0.45% ▼0.31%   PRV ▲1.22% ▼0.88%
 ──────────────────────────────────────────────────────
      NQ    BAJISTA     T1    D% -0.231%    BDG 35.0
   ...

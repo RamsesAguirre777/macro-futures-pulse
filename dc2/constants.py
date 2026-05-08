@@ -10,11 +10,8 @@ N_VELAS_BB = 20
 # Dead zone: 33% of first third (BP→t1) ≈ 11% of int_dist
 ZM_THRESHOLD_PCT = 0.333 * 0.333
 
-# Post-INT rebound threshold: 33% of int_dist
-REBOTE_UMBRAL_PCT: float = 0.33
-
-# Ticker families for cross-market analysis
-FAMILIAS = {
+# Ticker families for cross-market correlation analysis
+FAMILIES = {
     "SEMIS": ["NVDA", "AMD"],
     "ADS": ["META", "GOOGL"],
     "CLOUD": ["MSFT", "AMZN"],

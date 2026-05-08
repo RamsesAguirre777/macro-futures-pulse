@@ -67,7 +67,7 @@ def _fmt_signals_compact(s: str) -> str:
 
 
 def _fmt_card_rango(precio: object, hi: object, lo: object) -> str:
-    """DÍA/PRV: ▲ % hasta high (o ▲- si sin dato o precio por encima del high)."""
+    """DAY/PRV: ▲ % to high, ▼ % to low (▲- if no data or price already above high)."""
     if precio is None:
         return "▲-  ▼-"
     try:
@@ -177,7 +177,7 @@ def _print_table(data: dict) -> None:
         prv_s = _fmt_card_rango(
             r.get("price"), r.get("prev_session_high"), r.get("prev_session_low")
         )
-        line4 = f"  SIG  {sig}    DÍA {dia_s}   PRV {prv_s}"
+        line4 = f"  SIG  {sig}    DAY {dia_s}   PRV {prv_s}"
 
         print(line1)
         print(line2)
@@ -206,7 +206,7 @@ def main() -> None:
         "⚠️  yfinance: ~10-15min delay en futuros ES/NQ/YM. "
         "BTC Binance = real-time."
     )
-    log.info("macro_futures run iniciado (poll=%ss)", POLL_INTERVAL_SEC)
+    log.info("macro_futures run started (poll=%ss)", POLL_INTERVAL_SEC)
 
     try:
         while True:
@@ -217,14 +217,14 @@ def main() -> None:
                 jpath = out_dir / fname
                 with open(jpath, "w", encoding="utf-8") as f:
                     json.dump(result, f, indent=2, ensure_ascii=False, default=str)
-                log.info("JSON guardado: %s", jpath)
+                log.info("JSON saved: %s", jpath)
             except Exception as e:
                 log.exception("Error en ciclo: %s", e)
 
             time.sleep(POLL_INTERVAL_SEC)
     except KeyboardInterrupt:
-        log.info("Detenido por usuario (KeyboardInterrupt)")
-        print("\nDetenido.")
+        log.info("Stopped by user (KeyboardInterrupt)")
+        print("\nStopped.")
 
 
 if __name__ == "__main__":
