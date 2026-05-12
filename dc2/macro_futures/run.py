@@ -67,7 +67,7 @@ def _fmt_signals_compact(s: str) -> str:
 
 
 def _fmt_card_rango(precio: object, hi: object, lo: object) -> str:
-    """DAY/PRV: ▲ % to high, ▼ % to low (▲- if no data or price already above high)."""
+    """DÍA/PRV: ▲ % hasta high (o ▲- si sin dato o precio por encima del high)."""
     if precio is None:
         return "▲-  ▼-"
     try:
@@ -112,19 +112,47 @@ def _fmt_gap_line1(gap_tipo: object, gap_mag: object) -> str:
     return ""
 
 
+def _print_vix_line(payload: dict) -> None:
+    vx = payload.get("vix") or {}
+    spot = vx.get("spot")
+    delta = vx.get("delta")
+    ddir = vx.get("dir", "N/D")
+    nivel = vx.get("nivel", "N/D")
+    if spot is None:
+        print(
+            f"  VIX    PRC N/D    DELTA N/D    DIR {ddir}    NIVEL {nivel}"
+        )
+        return
+    d_s = "N/D" if delta is None else f"{float(delta):+.2f}"
+    print(
+        f"  VIX    PRC {float(spot):.2f}    DELTA {d_s}    "
+        f"DIR {ddir}    NIVEL {nivel}"
+    )
+
+
+def _ensure_stdout_utf8() -> None:
+    """Evita UnicodeEncodeError en Windows (cp1252) al imprimir ═/─/▲/▼."""
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+
 def _print_table(data: dict) -> None:
+    _ensure_stdout_utf8()
     w = 54
     now = datetime.now(_ET)
-    title = now.strftime("MACRO FUTURES — %H:%M ET  %Y-%m-%d")
+    title = now.strftime("MACRO FUTURES + REFUGIOS — %H:%M ET  %Y-%m-%d")
 
     print("\n" + "═" * w)
     print(title)
     print("Session opens: ES/NQ/YM=18:00 ET  |  BTC=00:00 ET")
     print("═" * w)
 
+    futures = data["futures"]
     cards: list[tuple[str, dict]] = []
-    for sym in ("ES", "NQ", "YM", "BTC"):
-        r = data.get(sym)
+    for sym in ("ES", "NQ", "YM", "BTC", "TLT", "GLD"):
+        r = futures.get(sym)
         if r:
             cards.append((sym, r))
 
@@ -177,7 +205,7 @@ def _print_table(data: dict) -> None:
         prv_s = _fmt_card_rango(
             r.get("price"), r.get("prev_session_high"), r.get("prev_session_low")
         )
-        line4 = f"  SIG  {sig}    DAY {dia_s}   PRV {prv_s}"
+        line4 = f"  SIG  {sig}    DÍA {dia_s}   PRV {prv_s}"
 
         print(line1)
         print(line2)
@@ -187,14 +215,13 @@ def _print_table(data: dict) -> None:
         if idx < len(cards) - 1:
             print("─" * w)
 
+    print("─" * w)
+    _print_vix_line(data)
     print("═" * w + "\n")
 
 
 def main() -> None:
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+    _ensure_stdout_utf8()
 
     out_dir = Path(OUTPUT_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -206,7 +233,7 @@ def main() -> None:
         "⚠️  yfinance: ~10-15min delay en futuros ES/NQ/YM. "
         "BTC Binance = real-time."
     )
-    log.info("macro_futures run started (poll=%ss)", POLL_INTERVAL_SEC)
+    log.info("macro_futures run iniciado (poll=%ss)", POLL_INTERVAL_SEC)
 
     try:
         while True:
@@ -217,14 +244,14 @@ def main() -> None:
                 jpath = out_dir / fname
                 with open(jpath, "w", encoding="utf-8") as f:
                     json.dump(result, f, indent=2, ensure_ascii=False, default=str)
-                log.info("JSON saved: %s", jpath)
+                log.info("JSON guardado: %s", jpath)
             except Exception as e:
                 log.exception("Error en ciclo: %s", e)
 
             time.sleep(POLL_INTERVAL_SEC)
     except KeyboardInterrupt:
-        log.info("Stopped by user (KeyboardInterrupt)")
-        print("\nStopped.")
+        log.info("Detenido por usuario (KeyboardInterrupt)")
+        print("\nDetenido.")
 
 
 if __name__ == "__main__":
