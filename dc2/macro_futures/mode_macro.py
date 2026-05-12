@@ -306,7 +306,12 @@ def run_macro_analysis(lookback_days: int = 5) -> dict[str, Any]:
         daily_for_targets = _filter_bars_before(
             bars_dict.get("1d", []), cutoff_bp_dt
         )
-        range_3d = TargetsCalculator.calculate_range_3d(symbol, daily_for_targets)
+        range_3d = TargetsCalculator.calculate_range_3d(
+            symbol,
+            daily_for_targets,
+            bars_1h=bars_dict.get("1h", []),
+            cutoff_time=cutoff_bp,
+        )
         targets = TargetsCalculator.calculate_targets(bp_f, range_3d)
 
         dist = precio_actual - bp_f
