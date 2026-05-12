@@ -265,15 +265,7 @@ def run_macro_analysis(lookback_days: int = 5) -> dict[str, Any]:
         bars_dict: dict[str, list] = all_bars.get(symbol, {})
         bars_1m = bars_dict.get("1m") or []
         if not bars_1m:
-            if symbol in ("TLT", "GLD"):
-                so = _get_session_open(symbol, now)
-                out[symbol] = _macro_row_nd(
-                    now,
-                    price=None,
-                    session_open=so,
-                )
-            else:
-                logger.warning("[%s] Sin barras 1m — omitido", symbol)
+            logger.warning("[%s] Sin barras 1m — omitido", symbol)
             continue
 
         precio_actual = float(bars_1m[-1]["c"])
@@ -309,105 +301,84 @@ def run_macro_analysis(lookback_days: int = 5) -> dict[str, Any]:
             )
             continue
 
-        try:
-            bp_f = float(bp)
+        bp_f = float(bp)
 
-            daily_for_targets = _filter_bars_before(
-                bars_dict.get("1d", []), cutoff_bp_dt
-            )
-            range_3d = TargetsCalculator.calculate_range_3d(
-                symbol, daily_for_targets
-            )
-            targets = TargetsCalculator.calculate_targets(bp_f, range_3d)
+        daily_for_targets = _filter_bars_before(
+            bars_dict.get("1d", []), cutoff_bp_dt
+        )
+        range_3d = TargetsCalculator.calculate_range_3d(symbol, daily_for_targets)
+        targets = TargetsCalculator.calculate_targets(bp_f, range_3d)
 
-            dist = precio_actual - bp_f
-            direction = direction_from_dist(
-                dist, float(targets.get("int_dist", 0.0))
-            )
+        dist = precio_actual - bp_f
+        direction = direction_from_dist(dist, float(targets.get("int_dist", 0.0)))
 
-            int_dist_val = float(targets.get("int_dist", 0.0))
-            open_bars = [b for b in bars_1m if b["t"] >= session_open]
-            session_open_price = (
-                float(open_bars[0]["o"]) if open_bars else precio_actual
-            )
-            open_zone, _open_pct = compute_open_zone(
-                open_930=session_open_price,
-                bp=bp_f,
-                int_pos=float(targets["int_pos"]),
-                int_neg=float(targets["int_neg"]),
-                direction=direction,
-                int_dist=int_dist_val,
-            )
-            zona_label = ZONA_MAP.get(open_zone or "", "??")
+        int_dist_val = float(targets.get("int_dist", 0.0))
+        open_bars = [b for b in bars_1m if b["t"] >= session_open]
+        session_open_price = float(open_bars[0]["o"]) if open_bars else precio_actual
+        open_zone, _open_pct = compute_open_zone(
+            open_930=session_open_price,
+            bp=bp_f,
+            int_pos=float(targets["int_pos"]),
+            int_neg=float(targets["int_neg"]),
+            direction=direction,
+            int_dist=int_dist_val,
+        )
+        zona_label = ZONA_MAP.get(open_zone or "", "??")
 
-            dist_overnight = round(dist, 4)
-            dist_overnight_pct = (
-                round((precio_actual - bp_f) / bp_f * 100, 3) if bp_f else 0.0
-            )
+        dist_overnight = round(dist, 4)
+        dist_overnight_pct = (
+            round((precio_actual - bp_f) / bp_f * 100, 3) if bp_f else 0.0
+        )
 
-            badge = compute_badge_long(
-                bars_dict,
-                cutoff_time=cutoff_bp_dt,
-                now_time=now,
-                precio=precio_actual,
-            )
-            signals_3_9 = compute_signals_3_9(bars_dict, now)
+        badge = compute_badge_long(
+            bars_dict,
+            cutoff_time=cutoff_bp_dt,
+            now_time=now,
+            precio=precio_actual,
+        )
+        signals_3_9 = compute_signals_3_9(bars_dict, now)
 
-            _, e20, e50, e200 = _ema20_50_200_1h(bars_dict.get("1h", []), now)
-            ema_align = ema_alignment(precio_actual, e20, e50, e200)
+        _, e20, e50, e200 = _ema20_50_200_1h(bars_dict.get("1h", []), now)
+        ema_align = ema_alignment(precio_actual, e20, e50, e200)
 
-            gap_tipo, gap_mag, prev_day_pct = _gap_and_prev_day(
-                bars_dict.get("1d", []), cutoff_bp_dt
-            )
+        gap_tipo, gap_mag, prev_day_pct = _gap_and_prev_day(
+            bars_dict.get("1d", []), cutoff_bp_dt
+        )
 
-            ec = conviction_score(
-                direction,
-                gap_tipo,
-                gap_mag,
-                prev_day_pct,
-                ema_align,
-                ticker=symbol,
-            )
+        ec = conviction_score(
+            direction,
+            gap_tipo,
+            gap_mag,
+            prev_day_pct,
+            ema_align,
+            ticker=symbol,
+        )
 
-            out[symbol] = {
-                "price": round(precio_actual, 4),
-                "bp": round(bp_f, 4),
-                "session_open": session_open.strftime("%Y-%m-%d %H:%M ET"),
-                "session_high": session_high,
-                "session_low": session_low,
-                "prev_session_high": prev_session_high,
-                "prev_session_low": prev_session_low,
-                "int_pos": round(float(targets["int_pos"]), 4),
-                "int_neg": round(float(targets["int_neg"]), 4),
-                "max_pos": round(float(targets["max_pos"]), 4),
-                "max_neg": round(float(targets["max_neg"]), 4),
-                "direction": direction,
-                "zona": zona_label,
-                "dist_overnight": dist_overnight,
-                "dist_overnight_pct": dist_overnight_pct,
-                "badge": round(float(badge), 2),
-                "signals_3_9": signals_3_9,
-                "ema_align": ema_align,
-                "ec_score": float(ec),
-                "ec_accion": _ec_accion(ec),
-                "gap_tipo": gap_tipo if symbol != "BTC" else None,
-                "gap_mag": round(gap_mag, 3) if symbol != "BTC" else None,
-                "timestamp": now.isoformat(),
-            }
-        except Exception as e:
-            if symbol in ("TLT", "GLD"):
-                logger.warning("[%s] error en pipeline macro: %s", symbol, e)
-                out[symbol] = _macro_row_nd(
-                    now,
-                    price=precio_actual,
-                    session_open=session_open,
-                    session_high=session_high,
-                    session_low=session_low,
-                    prev_session_high=prev_session_high,
-                    prev_session_low=prev_session_low,
-                )
-            else:
-                raise
+        out[symbol] = {
+            "price": round(precio_actual, 4),
+            "bp": round(bp_f, 4),
+            "session_open": session_open.strftime("%Y-%m-%d %H:%M ET"),
+            "session_high": session_high,
+            "session_low": session_low,
+            "prev_session_high": prev_session_high,
+            "prev_session_low": prev_session_low,
+            "int_pos": round(float(targets["int_pos"]), 4),
+            "int_neg": round(float(targets["int_neg"]), 4),
+            "max_pos": round(float(targets["max_pos"]), 4),
+            "max_neg": round(float(targets["max_neg"]), 4),
+            "direction": direction,
+            "zona": zona_label,
+            "dist_overnight": dist_overnight,
+            "dist_overnight_pct": dist_overnight_pct,
+            "badge": round(float(badge), 2),
+            "signals_3_9": signals_3_9,
+            "ema_align": ema_align,
+            "ec_score": float(ec),
+            "ec_accion": _ec_accion(ec),
+            "gap_tipo": gap_tipo if symbol != "BTC" else None,
+            "gap_mag": round(gap_mag, 3) if symbol != "BTC" else None,
+            "timestamp": now.isoformat(),
+        }
 
     vix = _fetch_vix_dict()
     return {"futures": out, "vix": vix}

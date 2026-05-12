@@ -151,7 +151,7 @@ def _print_table(data: dict) -> None:
 
     futures = data["futures"]
     cards: list[tuple[str, dict]] = []
-    for sym in ("ES", "NQ", "YM", "BTC", "TLT", "GLD"):
+    for sym in ("ES", "NQ", "YM", "BTC", "ZB", "GC"):
         r = futures.get(sym)
         if r:
             cards.append((sym, r))

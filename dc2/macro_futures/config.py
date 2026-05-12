@@ -7,8 +7,8 @@ FUTURES: dict[str, str] = {
     "NQ": "NQ=F",  # NASDAQ
     "YM": "YM=F",  # Dow Jones
     "BTC": "BTC-USD",  # vía Binance en data_client (no yfinance)
-    "TLT": "TLT",
-    "GLD": "GLD",
+    "ZB": "ZB=F",  # Treasury 30Y (CME)
+    "GC": "GC=F",  # oro (COMEX)
 }
 
 VIX_SYMBOL = "^VIX"
