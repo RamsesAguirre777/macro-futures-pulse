@@ -64,7 +64,7 @@ def _rows_to_bars(df: pd.DataFrame) -> list[dict[str, Any]]:
 
 
 class FuturesDataClient:
-    """Multi-TF bar fetcher: CME futures via yfinance; BTC via Binance public API."""
+    """Barras multi-TF: futuros CME vía yfinance; BTC vía Binance pública."""
 
     def _fetch_yfinance_bars(
         self, symbol: str, tf: str, lookback_days: int
@@ -73,11 +73,11 @@ class FuturesDataClient:
 
         iv = _YF_INTERVAL.get(tf)
         if not iv:
-            logger.warning("yfinance: unsupported TF %s", tf)
+            logger.warning("yfinance: TF no soportado %s", tf)
             return []
 
         end_dt = datetime.now(_ET)
-        # yfinance intraday window cap: 1m ~7 days max
+        # Intradía yfinance: ventana acotada (1m ~7d)
         if tf == "1m":
             days = min(max(lookback_days, 1), 7)
         else:
@@ -114,7 +114,7 @@ class FuturesDataClient:
     def _fetch_binance_bars(self, tf: str, lookback_days: int) -> list[dict[str, Any]]:
         interval = _BINANCE_INTERVAL.get(tf)
         if not interval:
-            logger.warning("Binance: unsupported TF %s", tf)
+            logger.warning("Binance: TF no soportado %s", tf)
             return []
 
         params: dict[str, str | int] = {
@@ -127,7 +127,7 @@ class FuturesDataClient:
             r.raise_for_status()
             raw = r.json()
         except Exception as e:
-            logger.warning("Binance klines failed (%s): %s", tf, e)
+            logger.warning("Binance klines falló (%s): %s", tf, e)
             return []
 
         out: list[dict[str, Any]] = []
@@ -151,19 +151,19 @@ class FuturesDataClient:
         self, symbol: str, tf: str, lookback_days: int = 5
     ) -> list[dict[str, Any]]:
         """
-        Returns bar list in dc2 format: t (ET), o,h,l,c,v.
-        BTC-USD uses Binance; all others use yfinance.
+        Devuelve lista de barras en formato dc2: t (ET), o,h,l,c,v.
+        BTC-USD usa Binance; resto yfinance.
         """
         if symbol == FUTURES["BTC"]:
             return self._fetch_binance_bars(tf, lookback_days)
         try:
             return self._fetch_yfinance_bars(symbol, tf, lookback_days)
         except Exception as e:
-            logger.warning("yfinance failed %s %s: %s", symbol, tf, e)
+            logger.warning("yfinance falló %s %s: %s", symbol, tf, e)
             return []
 
     def fetch_all_bars(self, lookback_days: int = 5) -> dict[str, dict[str, list]]:
-        """{ES|NQ|YM|BTC: {tf: bars_list}}."""
+        """{clave FUTURES (ES|NQ|YM|BTC|ZB|GC): {tf: bars_list}}."""
         out: dict[str, dict[str, list]] = {}
         for key, sym in FUTURES.items():
             out[key] = {}
@@ -172,7 +172,7 @@ class FuturesDataClient:
                 out[key][tf] = bars
                 if not bars and key != "BTC":
                     logger.warning(
-                        "No bars %s %s (%s) — check symbol or yfinance delay",
+                        "Sin barras %s %s (%s) — comprobar símbolo o delay yfinance",
                         key,
                         tf,
                         sym,

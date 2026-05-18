@@ -1,13 +1,41 @@
-output/
-*.json
+data/
 .env
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
 *.egg-info/
-dist/
-build/
 .venv/
 venv/
+dist/
+build/
+
+# Private / personal files
+CLAUDE.md
+.claude/
+everything-claude-code/
+desktop.ini
+
+# Spreadsheets and workbooks
+*.xlsx
+*.xlsm
+*.xls
+
+# DuckDB databases
+*.duckdb
+*.db
+
+# Runtime outputs and logs
+dc2/macro_futures/output/
+logs/
+exports/
+outputs/
+analysis/
+stats/
+playbooks/
+scripts/
+macro_futures/
+
+# Personal root-level scripts
+*.ps1
+stats_*.json
