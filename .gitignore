@@ -48,3 +48,4 @@ data_collector.py
 alerts/config.py
 alerts/state.json
 alerts/user_alerts.json
+alerts/__pycache__/
