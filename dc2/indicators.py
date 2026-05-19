@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import logging
 
-from mi_backtesting_nvda import caution_tf_key_label_pairs
+from backtest_engine import caution_tf_key_label_pairs
 
 from dc2.constants import (
     REBOTE_UMBRAL_PCT,

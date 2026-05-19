@@ -4,7 +4,7 @@ Multi-TF BP, BB, signals 3/9, CAUTION, long/short%, playbook BB retroceso.
 Genera MI_BACKTESTING_<TICKER>.xlsx.
 
 Uso:
-  python mi_backtesting_nvda.py [--ticker TICKER] [--test] [--verify] [--all]
+  python backtest_engine.py [--ticker TICKER] [--test] [--verify] [--all]
   --ticker: NVDA (default), AMD, etc.
   --test: Solo procesa fechas de oct 2025 para comparar vs CSV Milton.
   --verify: Verifica datos premarket y corte 09:28 para 2025-10-06.

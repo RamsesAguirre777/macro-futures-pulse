@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mi_backtesting_nvda import (
+from backtest_engine import (
     build_tfs_rth,
     compute_caution_cambio_1v3,
     compute_caution_real_930,
