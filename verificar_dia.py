@@ -36,7 +36,7 @@ try:
 except ImportError:
     ET = None
 
-API_KEY = "JEHzudOxWa2cjAqLi4DNGJItUBAe84Xs"
+API_KEY = os.environ.get("POLYGON_API_KEY", "")
 
 # Columnas nuevas al final del CSV (orden fijo)
 NEW_CSV_COLUMNS = [
