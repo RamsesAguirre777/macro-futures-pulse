@@ -8,6 +8,8 @@ import pandas as pd
 from dc2.constants import TICKERS, TIMEZONE, TF_LIST
 from dc2.utils import (
     _filter_bars_before,
+    _filter_bars_upto_inclusive,
+    _compute_bb_from_closes,
 )
 from dc2.indicators import (
     compute_badge_long,
@@ -26,6 +28,7 @@ from dc2.data_clients import (
     SkipFilter,
 )
 from dc2.outputs import write_json, write_context_compressed, write_ai_dashboard
+from dc2.print_dashboard import print_premarket_ticker
 
 logger = logging.getLogger(__name__)
 
@@ -252,6 +255,26 @@ async def run_mode_9_15(tickers_to_run: list, date_str: str, output_data: dict) 
                 f"range_3d={round(range_3d,3)}"
             )
 
+            # ── BB 5M y 1H para Telegram dashboard ────────────────────
+            bars_1h_pre  = _filter_bars_before(bars_dict.get("1h", []), cutoff_et)
+            bars_5m_pre  = _filter_bars_before(bars_dict.get("5m", []), cutoff_et)
+            bars_1h_prev = _filter_bars_upto_inclusive(bars_dict.get("1h", []), cutoff_prev_1600)
+            bars_5m_prev = _filter_bars_upto_inclusive(bars_dict.get("5m", []), cutoff_prev_1600)
+
+            ema3_1h: float | None = None
+            ema9_1h: float | None = None
+            if len(bars_1h_pre) >= 9:
+                _cl_1h = pd.Series(
+                    [float(b["c"]) for b in bars_1h_pre[-20:]], dtype=float
+                )
+                ema3_1h = float(_cl_1h.ewm(span=3, adjust=False).mean().iloc[-1])
+                ema9_1h = float(_cl_1h.ewm(span=9, adjust=False).mean().iloc[-1])
+
+            bbt_5m_pre,  bbb_5m_pre  = _compute_bb_from_closes([b["c"] for b in bars_5m_pre])
+            bbt_1h_pre,  bbb_1h_pre  = _compute_bb_from_closes([b["c"] for b in bars_1h_pre])
+            bbt_5m_close, bbb_5m_close = _compute_bb_from_closes([b["c"] for b in bars_5m_prev])
+            bbt_1h_close, bbb_1h_close = _compute_bb_from_closes([b["c"] for b in bars_1h_prev])
+
             # Guardar datos
             output_data["tickers"][ticker] = {
                 "bp": bp,
@@ -261,6 +284,7 @@ async def run_mode_9_15(tickers_to_run: list, date_str: str, output_data: dict) 
                 "max_neg": targets["max_neg"],
                 "int_dist": targets["int_dist"],
                 "max_dist": targets["max_dist"],
+                "range_3d": range_3d,
                 "gap_type": gap_type,
                 "gap_pct": gap_pct,
                 "prev_day_change": prev_day_change_pct,
@@ -290,7 +314,27 @@ async def run_mode_9_15(tickers_to_run: list, date_str: str, output_data: dict) 
                 "ec_size":              ec_size,
                 "rango_pm":             rango_pm,
                 "rango_prev_day":       rango_prev_day,
+                "ema3_1h":              ema3_1h,
+                "ema9_1h":              ema9_1h,
+                "bbt_5m_pre":           bbt_5m_pre,
+                "bbb_5m_pre":           bbb_5m_pre,
+                "bbt_1h_pre":           bbt_1h_pre,
+                "bbb_1h_pre":           bbb_1h_pre,
+                "bbt_5m_close":         bbt_5m_close,
+                "bbb_5m_close":         bbb_5m_close,
+                "bbt_1h_close":         bbt_1h_close,
+                "bbb_1h_close":         bbb_1h_close,
+                "prev_day_high":        prev_day_high,
+                "prev_day_low":         prev_day_low,
+                "prev_close":           prev_close,
             }
+            print_premarket_ticker(
+                ticker,
+                output_data["tickers"][ticker],
+                "premarket_9_15",
+                precio_premarket,
+                datetime.now(TIMEZONE),
+            )
 
         except Exception as e:
             logger.error(f"[{ticker}] Error procesando: {e}", exc_info=True)

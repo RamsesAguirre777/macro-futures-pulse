@@ -4,9 +4,13 @@ yfinance
 tabulate
 duckdb
 pandas
+numpy
 openpyxl
 pyarrow
 python-dotenv
 pytz
 scikit-learn
 scipy
+websockets
+finnhub-python
+alpaca-trade-api

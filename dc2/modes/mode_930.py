@@ -33,6 +33,7 @@ from dc2.indicators import (
 from dc2.premium_detector import PremiumDetector
 from dc2.data_clients import AlpacaHistoricalClient, AlpacaSnapshotClient
 from dc2.outputs import write_json, write_context_compressed, write_ai_dashboard
+from dc2.print_dashboard import print_premarket_ticker
 
 logger = logging.getLogger(__name__)
 
@@ -368,6 +369,13 @@ async def run_mode_930(tickers_to_run: list, date_str: str) -> None:
             logger.info(
                 f"[{ticker}] open_930 resultado: ec_accion={ec_accion} | "
                 f"ec_score={ec_score}"
+            )
+            print_premarket_ticker(
+                ticker,
+                td,
+                "open_930",
+                float(open_price),
+                datetime.now(TIMEZONE),
             )
 
         except Exception as e:

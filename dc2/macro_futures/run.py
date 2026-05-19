@@ -245,6 +245,11 @@ def main() -> None:
                 with open(jpath, "w", encoding="utf-8") as f:
                     json.dump(result, f, indent=2, ensure_ascii=False, default=str)
                 log.info("JSON guardado: %s", jpath)
+                try:
+                    from alerts.signal_engine import evaluate_signals
+                    evaluate_signals(result)
+                except Exception as _ae:
+                    log.warning("Alerts skipped: %s", _ae)
             except Exception as e:
                 log.exception("Error en ciclo: %s", e)
 

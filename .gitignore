@@ -34,8 +34,12 @@ analysis/
 stats/
 playbooks/
 scripts/
-macro_futures/
 
 # Personal root-level scripts
 *.ps1
 stats_*.json
+
+# Alerts — credentials and runtime state
+alerts/config.py
+alerts/state.json
+alerts/user_alerts.json

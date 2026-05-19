@@ -26,6 +26,7 @@ from dc2.modes.mode_9_28 import run_mode_9_28
 from dc2.modes.mode_test import run_mode_test
 from dc2.modes.mode_930 import run_mode_930
 from dc2.modes.mode_backtest import run_mode_backtest
+from dc2.modes.mode_live import run_mode_live
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,6 +46,7 @@ async def main() -> None:
             "premarket_9_15",
             "premarket_9_28",
             "open_930",
+            "live",
             "verify",
             "test",
             "backtest",
@@ -88,6 +90,13 @@ async def main() -> None:
         if not args.ticker:
             parser.error("--modo verify requiere --ticker (ej. NVDA)")
         run_verify_mode(args.ticker.strip().upper())
+        return
+
+    # ── live — yfinance, no necesita Alpaca ───────────────────────
+    if args.modo == "live":
+        if not args.ticker:
+            parser.error("--modo live requiere --ticker (ej. NVDA)")
+        run_mode_live(args.ticker.strip().upper())
         return
 
     # ── backtest no necesita Alpaca ni output_data ─────────────────
