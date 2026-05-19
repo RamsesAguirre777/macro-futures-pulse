@@ -39,9 +39,10 @@ scripts/
 *.ps1
 stats_*.json
 
-# Proprietary backtesting — never push to public repo
+# Proprietary files — never push to public repo
 backtest_engine.py
 ec_score.py
+data_collector.py
 
 # Alerts — credentials and runtime state
 alerts/config.py
