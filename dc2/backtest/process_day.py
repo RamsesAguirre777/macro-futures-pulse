@@ -175,7 +175,7 @@ def process_day_bt(
     Full backtest analysis for one ticker/day.
     Returns (dash_dict, res_dict) — no 'ticker'/'fecha' keys (added by caller).
     """
-    from backtest_engine import (
+    from dc2.caution_utils import (
         build_tfs_rth,
         compute_caution_cambio_1v3,
         compute_caution_real_930,

@@ -35,9 +35,7 @@ _DATA_DIR = Path(__file__).parent.parent.parent / "data" / "processed"
 
 
 async def run_mode_test(tickers_to_run: list, date_str: str, output_data: dict) -> None:
-    import backtest_engine as _mbnv
-
-    _mbnv.DATA_DIR = _DATA_DIR
+    import dc2.caution_utils as _mbnv  # only RTH/caution utils needed here
 
     logger.info(f"=== MODO: test | tickers: {len(tickers_to_run)} ===")
     bars_by_ticker = {}

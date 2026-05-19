@@ -7,7 +7,11 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from ec_score import display_ranking, rankear_tickers
+try:
+    from ec_score import display_ranking, rankear_tickers
+except ImportError:
+    display_ranking = None
+    rankear_tickers = None
 
 from dc2.constants import TICKERS, TICKERS_MACRO, TIMEZONE, FAMILIAS
 from dc2.premium_detector import (
